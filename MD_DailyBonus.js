@@ -1,19 +1,3 @@
-/*
-
-[task_local]
-# 签到
-39 11 * * * https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js, tag=MDC, enabled=true
-
-[rewrite_local]
-# 获取Token. 
-^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
-^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
-
-[mitm]
-hostname = apiv2.hichar.cn
-*/
-
-
 // 配置常量
 const CONFIG = {
     LOG_DETAILS: false, // 是否开启响应日志
@@ -649,27 +633,37 @@ function GetCookie() {
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
-        const body = resp.body || '';
-        $nobyda.notify('GetCookie', '', `body: ${body}`);
+        let body = resp.body || '';
+        let bodyData = null;
+        
+        if (body) {
+            try {
+                bodyData = typeof body === 'string' ? JSON.parse(body) : body;
+            } catch (e) {
+                console.log('解析body失败:', e);
+                bodyData = null;
+            }
+        }
 
         let userId = 0;
         let token = '';
 
-        if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && body) {
-            userId = body?.data?.user?.id || 0;
-            token = body?.data?.token || '';
+        if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && bodyData) {
+            userId = bodyData?.data?.user?.id || 0;
+            token = bodyData?.data?.token || '';
         } else if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
-            if (body) {
-                userId = body?.data?.id || 0;
+            if (bodyData) {
+                userId = bodyData?.data?.id || 0;
             }
             token = req.headers?.token || '';
         }
+        
         $nobyda.notify('GetCookie', '', `userId: ${userId}`);
         $nobyda.notify('GetCookie', '', `token: ${token}`);
 
         if (userId && token) {
             const tokenData = {userId, token};
-            $nobyda.notify('GetCookie', '', `tokenData: ${tokenData}`);
+            $nobyda.notify('GetCookie', '', `tokenData: ${JSON.stringify(tokenData)}`);
 
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
             $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
