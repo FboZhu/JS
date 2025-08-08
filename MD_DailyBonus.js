@@ -629,6 +629,9 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
+    $nobyda.notify('GetCookie', '', req + `${req.method}`);
+    $nobyda.notify('GetCookie', '', req + `${req.body}`);
+    $nobyda.notify('GetCookie', '', req + `${req.headers}`);
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
@@ -657,7 +660,7 @@ function GetCookie() {
         }
 
         if (userId && token) {
-            const tokenData = { userId, token };
+            const tokenData = {userId, token};
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
             $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
         }
@@ -673,11 +676,7 @@ function GetCookie() {
     try {
         const cookiesInfo = "Cookies";
         const cookiesData = $nobyda.read(cookiesInfo);
-        $nobyda.notify("ReadCookie", "", typeof cookiesData === 'string' ? cookiesData : JSON.stringify(cookiesData));
-
         if ($nobyda.isRequest) {
-            $nobyda.notify("ReadCookie", "", "is request");
-
             GetCookie();
         } else if (cookiesData) {
             // 解析cookies数据
