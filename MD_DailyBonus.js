@@ -293,7 +293,31 @@ function notify() {
             const afterMoney = merge.TotalMoney?.after || 0;
 
             // 构建简洁的消息
-            let finalMessage = `毛豆充任务完成，执行前余额：${beforeMoney}，执行后余额：${afterMoney}`;
+            let finalMessage = `毛豆充任务完成，余额：${beforeMoney} -> ${afterMoney}`;
+
+            // 检查是否有任务和抽奖的执行情况
+            let hasTask = false;
+            let hasDraw = false;
+            
+            // 检查是否有任务执行记录
+            if (merge.MaoDouTask && merge.MaoDouTask.notify) {
+                hasTask = true;
+            }
+            
+            // 检查是否有抽奖执行记录
+            if (merge.MaoDouDraw && merge.MaoDouDraw.notify) {
+                hasDraw = true;
+            }
+
+            // 如果没有任务执行记录，添加"无剩余次数"
+            if (!hasTask) {
+                notifyMessage += '\n毛豆充-任务无剩余次数';
+            }
+
+            // 如果没有抽奖执行记录，添加"无剩余次数"
+            if (!hasDraw) {
+                notifyMessage += '\n毛豆充-抽奖无剩余次数';
+            }
 
             finalMessage += notifyMessage;
 
