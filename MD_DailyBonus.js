@@ -631,8 +631,10 @@ function GetCookie() {
     const req = $request;
     if (!req || req.method === 'OPTIONS') return;
     try {
+        const url = req.url || '';
         let userId = 0;
         let token = '';
+
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && parsed) {
             userId = parsed?.data?.user?.id || 0;
             token = parsed?.data?.token || '';
