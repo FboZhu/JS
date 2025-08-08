@@ -637,27 +637,27 @@ function GetCookie() {
 
         let userId = 0;
         let token = '';
-        $nobyda.notify('GetCookie', '', `body: ${body}`);
 
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && body) {
             userId = body?.data?.user?.id || 0;
             token = body?.data?.token || '';
         } else if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
             if (body) {
-                userId = body?.data?.user?.id || 0;
+                userId = body?.data?.id || 0;
             }
             token = req.headers?.token || '';
         }
-
         $nobyda.notify('GetCookie', '', `userId: ${userId}`);
         $nobyda.notify('GetCookie', '', `token: ${token}`);
-        
+
         if (userId && token) {
             const tokenData = {userId, token};
             $nobyda.notify('GetCookie', '', `tokenData: ${tokenData}`);
 
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
             $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
+        } else {
+            throw new Error(`Cookie中缺少信息,userID:${userId},token:${token}`);
         }
     } catch (e) {
         $nobyda.notify('GetCookie', '', e?.message || String(e));
