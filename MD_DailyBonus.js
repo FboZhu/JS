@@ -629,8 +629,8 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
-    console.log(req.body)
-    console.log(req.headers)
+    console.log(cookie + JSON.stringify(req.body))
+    console.log(cookie + JSON.stringify(req.headers))
     if (req.method !== 'OPTIONS') {
         try {
             if (/^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(req.url) && req.response) {
