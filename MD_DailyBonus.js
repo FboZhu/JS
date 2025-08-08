@@ -629,6 +629,7 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
+    const resp = $response;
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
@@ -638,7 +639,7 @@ function GetCookie() {
             try { return typeof v === 'string' ? v : JSON.stringify(v); } catch (_) { return String(v); }
         };
         
-        $nobyda.notify('GetCookie', '', `req: ${safeString(req)}`);
+        $nobyda.notify('GetCookie', '', `resp: ${safeString(resp)}`);
 
         let userId = 0;
         let token = '';
