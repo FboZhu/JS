@@ -639,15 +639,15 @@ function GetCookie() {
         let token = '';
 
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && body) {
-            userId = req.body?.data?.user?.id || 0;
-            token = req.body?.data?.token || '';
+            userId = body?.data?.user?.id || 0;
+            token = body?.data?.token || '';
         } else if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
             if (body) {
-                userId = req.body?.data?.user?.id || 0;
+                userId = body?.data?.user?.id || 0;
             }
             token = req.headers?.token || '';
         }
-        
+
         if (userId && token) {
             const tokenData = {userId, token};
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
