@@ -631,30 +631,8 @@ function GetCookie() {
     const req = $request;
     if (!req || req.method === 'OPTIONS') return;
     try {
-        const url = req.url || '';
-        // 解析正文
-        let parsed = null;
-        if (hasRespObj) {
-            parsed = req.response;
-        } else if (hasRespStr) {
-            try {
-                parsed = JSON.parse(req.response);
-            } catch (_) {
-                parsed = null;
-            }
-        } else if (hasBodyObj) {
-            parsed = req.body;
-        } else if (hasBodyStr) {
-            try {
-                parsed = JSON.parse(req.body);
-            } catch (_) {
-                parsed = null;
-            }
-        }
-
         let userId = 0;
         let token = '';
-
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && parsed) {
             userId = parsed?.data?.user?.id || 0;
             token = parsed?.data?.token || '';
