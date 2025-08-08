@@ -629,8 +629,9 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
-    console.log(cookie + JSON.stringify(req.body))
-    console.log(cookie + JSON.stringify(req.headers))
+    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.body));
+    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.headers));
+    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.url));
     if (req.method !== 'OPTIONS') {
         try {
             if (/^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(req.url) && req.response) {
@@ -666,8 +667,11 @@ function GetCookie() {
     try {
         const cookiesInfo = "Cookies";
         const cookiesData = $nobyda.read(cookiesInfo);
+        $nobyda.notify("ReadCookie", "", error.message || JSON.stringify(cookiesData));
 
         if ($nobyda.isRequest) {
+            $nobyda.notify("ReadCookie", "", "is request");
+
             GetCookie();
         } else if (cookiesData) {
             // 解析cookies数据
