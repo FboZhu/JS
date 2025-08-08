@@ -633,8 +633,12 @@ function GetCookie() {
     try {
         const url = req.url || '';
         const body = req.body || '';
-
-        $nobyda.notify('GetCookie', '', `url: ${body}`);
+        
+        const safeString = (v) => {
+            try { return typeof v === 'string' ? v : JSON.stringify(v); } catch (_) { return String(v); }
+        };
+        
+        $nobyda.notify('GetCookie', '', `req: ${safeString(req)}`);
 
         let userId = 0;
         let token = '';
