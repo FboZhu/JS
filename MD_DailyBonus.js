@@ -632,6 +632,31 @@ function GetCookie() {
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
+        const hasRespStr = typeof req.response === 'string' && req.response.length > 0;
+        const hasRespObj = req.response && typeof req.response === 'object';
+        const hasBodyStr = typeof req.body === 'string' && req.body.length > 0;
+        const hasBodyObj = req.body && typeof req.body === 'object';
+
+        // 解析正文
+        let parsed = null;
+        if (hasRespObj) {
+            parsed = req.response;
+        } else if (hasRespStr) {
+            try {
+                parsed = JSON.parse(req.response);
+            } catch (_) {
+                parsed = null;
+            }
+        } else if (hasBodyObj) {
+            parsed = req.body;
+        } else if (hasBodyStr) {
+            try {
+                parsed = JSON.parse(req.body);
+            } catch (_) {
+                parsed = null;
+            }
+        }
+
         let userId = 0;
         let token = '';
 
