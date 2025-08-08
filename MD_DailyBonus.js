@@ -279,21 +279,29 @@ function notify() {
                 success += item.success ? Number(item.success) : 0;
                 fail += item.fail ? Number(item.fail) : 0;
                 err += item.error ? Number(item.error) : 0;
-                notifyMessage += item.notify ? `\n${item.notify}` : '';
+                
+                // 只添加关键通知信息
+                if (item.notify) {
+                    // 过滤掉查询成功的通知，只保留签到、任务、抽奖的通知
+                    if (!item.notify.includes('查询成功') && !item.notify.includes('余额')) {
+                        notifyMessage += `\n${item.notify}`;
+                    }
+                }
             }
 
             const beforeMoney = merge.TotalMoney?.before || 0;
             const afterMoney = merge.TotalMoney?.after || 0;
 
-            let finalMessage = `今天成功${success}个接口，失败${fail}个接口，执行前余额：${beforeMoney}，执行后余额：${afterMoney}${notifyMessage}`;
+            // 构建简洁的消息
+            let finalMessage = `毛豆充任务完成，执行前余额：${beforeMoney}，执行后余额：${afterMoney}`;
+
+            finalMessage += notifyMessage;
 
             // 如果检测到SKIP状态，在消息开头添加提示
             if (shouldSkip()) {
                 finalMessage = `⚠️ 检测到Token失效，已跳过后续操作\n${finalMessage}`;
             }
-            $nobyda.notify("", "", finalMessage, {
-                'media-url': $nobyda.headUrl || 'https://cdn.jsdelivr.net/gh/NobyDa/mini@master/Color/jd.png'
-            });
+            $nobyda.notify("", "", finalMessage);
         } catch (error) {
             $nobyda.notify("通知模块 " + error.name + "‼️", JSON.stringify(error), error.message);
         } finally {
