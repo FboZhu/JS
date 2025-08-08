@@ -637,6 +637,7 @@ function GetCookie() {
 
         let userId = 0;
         let token = '';
+        $nobyda.notify('GetCookie', '', `body: ${body}`);
 
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && body) {
             userId = body?.data?.user?.id || 0;
