@@ -1,3 +1,20 @@
+/*
+毛豆充 签到
+
+[task_local]
+# 签到
+39 11 * * * https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js, tag=MDC, enabled=true
+
+[rewrite_local]
+# 获取Token. 
+^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
+^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
+
+[mitm]
+hostname = apiv2.hichar.cn
+
+*/
+
 // 配置常量
 const CONFIG = {
     LOG_DETAILS: false, // 是否开启响应日志
@@ -79,7 +96,6 @@ async function all(cookie) {
         await UserInfo("after");
         await notify();
     } catch (error) {
-        console.error('执行过程中发生错误:', error);
         $nobyda.AnError("主执行流程", "all", error);
     }
 }
@@ -93,7 +109,6 @@ function UserInfo(name) {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log("\n跳过用户信息查询");
             resolve();
             return;
         }
@@ -110,17 +125,14 @@ function UserInfo(name) {
                 const result = JSON.parse(data);
                 const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
                 if (result.code === 0 && result.data) {
-                    console.log(`\n毛豆充-查询成功 ${details}`);
                     merge.TotalMoney[name] = result.data.globalPoints;
                     merge.MaoDouUserInfo.notify = `毛豆充-查询成功，余额${result.data.globalPoints}`;
                     merge.MaoDouUserInfo.success = 1;
                 } else if (result.code === 2004) {
-                    console.log(`\n"毛豆充-查询失败 ${details}`);
                     CONFIG.SKIP = true;
                     merge.MaoDouUserInfo.notify = "毛豆充-查询失败, 原因: Token失效‼️";
                     merge.MaoDouUserInfo.fail = 1;
                 } else {
-                    console.log(`\n总现金查询失败 ${details}`);
                     merge.MaoDouUserInfo.notify = "毛豆充-查询失败";
                     merge.MaoDouUserInfo.fail = 1;
                 }
@@ -142,7 +154,6 @@ function getWelfareTaskList() {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log("\n跳过获取任务列表");
             resolve(0);
             return;
         }
@@ -163,24 +174,18 @@ function getWelfareTaskList() {
                 const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
 
                 if (result.code === 0 && result.data && result.data) {
-                    console.log(`\n获取任务列表成功 ${details}`);
-
                     // 查找taskId为1的任务
                     const task1 = result.data.find(task => task.taskId === 1);
                     if (task1) {
                         const remainingTimes = Math.max(0, task1.limitTimes - task1.nowTimes);
-                        console.log(`\n任务1剩余次数: ${remainingTimes} (limitTimes: ${task1.limitTimes}, nowTimes: ${task1.nowTimes})`);
                         resolve(remainingTimes);
                     } else {
-                        console.log("\n未找到taskId为1的任务");
                         resolve(0);
                     }
                 } else if (result.code === 2004) {
-                    console.log(`\n获取任务列表失败，Token失效 ${details}`);
                     CONFIG.SKIP = true;
                     resolve(0);
                 } else {
-                    console.log(`\n获取任务列表失败，code: ${result.code}, msg: ${result.msg || result.message} ${details}`);
                     resolve(0);
                 }
             } catch (error) {
@@ -212,9 +217,6 @@ function getDrawPointsByDay() {
     };
 
     const points = pointsByDay[dayOfWeek] || 1000; // 默认1000
-    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-    console.log(`\n当前日期: ${today.toLocaleDateString()}, 星期${weekDays[dayOfWeek]}, 签到所需积分: ${points}`);
-
     return points;
 }
 
@@ -225,7 +227,6 @@ function getUserWelfarePoints() {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log("\n跳过获取用户福利积分");
             resolve(0);
             return;
         }
@@ -245,14 +246,11 @@ function getUserWelfarePoints() {
                 if (result.code === 0 && result.data && typeof result.data.points === 'number') {
                     const points = result.data.points;
                     const drawCount = Math.max(0, Math.floor(points / 1000)); // 使用固定的1000积分
-                    console.log(`\n获取用户福利积分成功，积分: ${points}, 可抽奖次数: ${drawCount} ${details}`);
                     resolve(drawCount);
                 } else if (result.code === 2004) {
-                    console.log(`\n获取用户福利积分失败，Token失效 ${details}`);
                     CONFIG.SKIP = true;
                     resolve(0);
                 } else {
-                    console.log(`\n获取用户福利积分失败，code: ${result.code}, msg: ${result.msg || result.message} ${details}`);
                     resolve(0);
                 }
             } catch (error) {
@@ -316,7 +314,6 @@ function MaoDouSign(delay) {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log("\n跳过毛豆充签到");
             resolve();
             return;
         }
@@ -344,21 +341,17 @@ function MaoDouSign(delay) {
                     const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
 
                     if (result.code === 2004) {
-                        console.log(`\n毛豆充Token失效 ${details}`);
                         CONFIG.SKIP = true;
                         merge.MaoDouSign.notify = "毛豆充-签到失败, 原因: Token失效‼️";
                         merge.MaoDouSign.fail = 1;
                     } else if (result.code === 0) {
                         merge.MaoDouSign.notify = `毛豆充-签到成功，获得积分: ${points}`;
                         merge.MaoDouSign.success = 1;
-                        console.log(`\n毛豆充-签到成功，获得积分: ${points}`);
                     } else if (result.code === -1) {
                         merge.MaoDouSign.notify = "毛豆充-签到成功，今日已签到";
                         merge.MaoDouSign.success = 1;
-                        console.log("\n毛豆充-今日已签到");
                     } else {
                         merge.MaoDouSign.fail = 1;
-                        console.log(`\n毛豆充-签到失败 ${details}`);
                     }
                 } catch (error) {
                     $nobyda.AnError("毛豆充-签到", "MaoDouSign", error, response, data);
@@ -385,7 +378,6 @@ function getRandomWaitTime(minTime = CONFIG.MIN_WAIT_TIME) {
 async function randomDelayTask(delay) {
     // 检查是否需要跳过
     if (shouldSkip()) {
-        console.log("\n跳过随机延迟任务执行");
         return;
     }
 
@@ -393,23 +385,18 @@ async function randomDelayTask(delay) {
     const taskCount = await getWelfareTaskList();
 
     if (taskCount === 0) {
-        console.log("\n任务已完成或获取失败，跳过任务执行");
         return;
     }
-
-    console.log(`\n开始执行任务，剩余次数: ${taskCount}`);
 
     // 改为顺序执行，这样可以及时检测到任务完成状态
     for (let i = 0; i < taskCount; i++) {
         // 每次循环前检查是否需要跳过
         if (shouldSkip()) {
-            console.log(`\n检测到Token失效，跳过剩余任务（${i}/${taskCount}）`);
             break;
         }
 
         // 检查任务是否已完成
         if (merge.TASK_COMPLETED) {
-            console.log(`\n检测到任务已完成，跳过剩余任务（${i}/${taskCount}）`);
             break;
         }
 
@@ -430,7 +417,6 @@ function MaoDouTask(delay, index) {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log(`\n跳过毛豆充任务${index}`);
             resolve();
             return;
         }
@@ -464,24 +450,20 @@ function MaoDouTask(delay, index) {
                     const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
 
                     if (result.code === 2004) {
-                        console.log(`\n毛豆充Token失效 ${details}`);
                         CONFIG.SKIP = true;
                         merge.MaoDouTask.notify = "毛豆充-任务失败, 原因: Token失效‼️";
                         merge.MaoDouTask.fail = 1;
                     } else if (result.code === 0) {
                         merge.MaoDouTask.notify = `毛豆充-任务${index}成功`;
                         merge.MaoDouTask.success = 1;
-                        console.log(`\n毛豆充-任务${index}成功`);
                     } else if (result.code === -1) {
                         // 任务不可重复完成，跳过后续任务
-                        console.log(`\n毛豆充-任务${index}不可重复完成，跳过后续任务`);
                         merge.MaoDouTask.notify = `毛豆充-任务${index}不可重复完成`;
                         merge.MaoDouTask.success = 1;
                         // 设置一个标记，让randomDelayTask知道要跳过后续循环
                         merge.TASK_COMPLETED = true;
                     } else {
                         merge.MaoDouTask.fail = 1;
-                        console.log(`\n毛豆充-任务${index}失败 ${details}`);
                     }
                 } catch (error) {
                     $nobyda.AnError("毛豆充-任务", "MaoDouTask", error, response, data);
@@ -501,7 +483,6 @@ function MaoDouTask(delay, index) {
 async function randomDelayDraw(delay) {
     // 检查是否需要跳过
     if (shouldSkip()) {
-        console.log("\n跳过随机延迟抽奖执行");
         return;
     }
 
@@ -509,23 +490,18 @@ async function randomDelayDraw(delay) {
     const drawCount = await getUserWelfarePoints();
 
     if (drawCount === 0) {
-        console.log("\n积分不足或获取失败，跳过抽奖执行");
         return;
     }
-
-    console.log(`\n开始执行抽奖，可抽奖次数: ${drawCount}`);
 
     // 改为顺序执行，这样可以及时检测到积分不足状态
     for (let i = 0; i < drawCount; i++) {
         // 每次循环前检查是否需要跳过
         if (shouldSkip()) {
-            console.log(`\n检测到Token失效，跳过剩余抽奖（${i}/${drawCount}）`);
             break;
         }
 
         // 检查积分是否不足
         if (merge.DRAW_INSUFFICIENT) {
-            console.log(`\n检测到积分不足，跳过剩余抽奖（${i}/${drawCount}）`);
             break;
         }
 
@@ -546,7 +522,6 @@ function MaoDouDraw(delay, index) {
     return new Promise(resolve => {
         // 检查是否需要跳过
         if (shouldSkip()) {
-            console.log(`\n跳过毛豆充抽奖${index}`);
             resolve();
             return;
         }
@@ -569,23 +544,19 @@ function MaoDouDraw(delay, index) {
 
                     if (result.code === 2004) {
                         CONFIG.SKIP = true;
-                        console.log(`\n毛豆充Token失效 ${details}`);
                         merge.MaoDouDraw.notify = "毛豆充-抽奖失败, 原因: Token失效‼️";
                         merge.MaoDouDraw.fail = 1;
                     } else if (result.code === 0) {
                         merge.MaoDouDraw.notify = `毛豆充-抽奖${index}成功`;
                         merge.MaoDouDraw.success = 1;
-                        console.log(`\n毛豆充-抽奖${index}成功`);
                     } else if (result.code === -1) {
                         // 积分不足，跳过后续抽奖
-                        console.log(`\n毛豆充-抽奖${index}积分不足，跳过后续抽奖`);
                         merge.MaoDouDraw.notify = `毛豆充-抽奖${index}积分不足`;
                         merge.MaoDouDraw.success = 1;
                         // 设置一个标记，让randomDelayDraw知道要跳过后续循环
                         merge.DRAW_INSUFFICIENT = true;
                     } else {
                         merge.MaoDouDraw.fail = 1;
-                        console.log(`\n毛豆充-抽奖${index}失败 ${details}`);
                     }
                 } catch (error) {
                     $nobyda.AnError("毛豆充-抽奖", "MaoDouDraw", error, response, data);
@@ -612,10 +583,6 @@ function Wait(readDelay, isInit = false) {
         const [min, max] = cleanDelay.split("-").map(Number);
         const randomTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
-        if (isInit) {
-            console.log(`\n初始化随机延迟: 最小${min / 1000}秒, 最大${max / 1000}秒`);
-        }
-
         return isInit ? readDelay : randomTime;
     } else if (typeof readDelay === 'number') {
         return readDelay > 0 ? readDelay : 0;
@@ -634,13 +601,13 @@ function GetCookie() {
     try {
         const url = req.url || '';
         let body = resp.body || '';
+
+        // 尝试解析body为JSON对象
         let bodyData = null;
-        
         if (body) {
             try {
                 bodyData = typeof body === 'string' ? JSON.parse(body) : body;
             } catch (e) {
-                console.log('解析body失败:', e);
                 bodyData = null;
             }
         }
@@ -657,14 +624,9 @@ function GetCookie() {
             }
             token = req.headers?.token || '';
         }
-        
-        $nobyda.notify('GetCookie', '', `userId: ${userId}`);
-        $nobyda.notify('GetCookie', '', `token: ${token}`);
 
         if (userId && token) {
             const tokenData = {userId, token};
-            $nobyda.notify('GetCookie', '', `tokenData: ${JSON.stringify(tokenData)}`);
-
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
             $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
         } else {
@@ -773,7 +735,6 @@ function nobyda() {
             return undefined;
         };
 
-        console.log(`${title}\n${subtitle}\n${message}`);
         if (isQuanX) $notify(title, subtitle, message, Opts(rawopts));
         if (isSurge) $notification.post(title, subtitle, message, Opts(rawopts));
         if (isJSBox) $push.schedule({
@@ -925,12 +886,10 @@ function nobyda() {
             }
             merge[keyname].error = 1;
         }
-        return console.log(`\n‼️${name}发生错误\n‼️名称: ${error.name}\n‼️描述: ${error.message}${JSON.stringify(error).match(/\"line\"/) ? `\n‼️行列: ${JSON.stringify(error)}` : ``}${resp && resp.status ? `\n‼️状态: ${resp.status}` : ``}${body ? `\n‼️响应: ${resp && resp.status != 503 ? body : `Omit.`}` : ``}`);
     };
 
     const time = () => {
         const end = ((Date.now() - start) / 1000).toFixed(2);
-        return console.log('\n签到用时: ' + end + ' 秒');
     };
 
     const done = (value = {}) => {
