@@ -629,34 +629,40 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
-    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.body));
-    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.headers));
-    $nobyda.notify("GetCookie", "", error.message || JSON.stringify(req.url));
-    if (req.method !== 'OPTIONS') {
+    if (!req || req.method === 'OPTIONS') return;
+    try {
+        const url = req.url || '';
+        const rawBody = typeof req.response === 'string' && req.response.length > 0
+            ? req.response
+            : (typeof req.body === 'string' ? req.body : '');
+
+        let userId = 0;
+        let token = '';
+        let parsed = null;
         try {
-            if (/^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(req.url) && req.response) {
-                const response = JSON.parse(req.body);
-                const userId = response.data?.user?.id || 0;
-                const token = response.data?.token || "";
-            } else if (/^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(req.url) && req.response) {
-                const response = JSON.parse(req.body);
-                const userId = response.data?.user?.id || 0;
-                const token = req.headers["token"]
-            }
-            if (userId && token) {
-                const tokenData = {"userId": userId, "token": token};
-                const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), "Cookies");
-                $nobyda.notify(
-                    `用户名: ${userId}`,
-                    "",
-                    `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`
-                );
-            } else {
-                throw new Error("写入Cookie失败, 关键值缺失‼️");
-            }
-        } catch (error) {
-            console.error('解析Cookie失败:', error);
+            parsed = rawBody ? JSON.parse(rawBody) : null;
+        } catch (_) {
+            parsed = null;
         }
+
+        if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && parsed) {
+            userId = parsed?.data?.user?.id || 0;
+            token = parsed?.data?.token || '';
+        } else if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
+            // 有些环境下 token 在请求头
+            if (parsed) {
+                userId = parsed?.data?.user?.id || 0;
+            }
+            token = req.headers?.token || req.headers?.Token || '';
+        }
+
+        if (userId && token) {
+            const tokenData = { userId, token };
+            const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
+            $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
+        }
+    } catch (e) {
+        $nobyda.notify('GetCookie', '', e?.message || String(e));
     }
 }
 
@@ -667,7 +673,7 @@ function GetCookie() {
     try {
         const cookiesInfo = "Cookies";
         const cookiesData = $nobyda.read(cookiesInfo);
-        $nobyda.notify("ReadCookie", "", error.message || JSON.stringify(cookiesData));
+        $nobyda.notify("ReadCookie", "", typeof cookiesData === 'string' ? cookiesData : JSON.stringify(cookiesData));
 
         if ($nobyda.isRequest) {
             $nobyda.notify("ReadCookie", "", "is request");
