@@ -633,13 +633,7 @@ function GetCookie() {
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
-        const body = req.body || '';
-        
-        const safeString = (v) => {
-            try { return typeof v === 'string' ? v : JSON.stringify(v); } catch (_) { return String(v); }
-        };
-        
-        $nobyda.notify('GetCookie', '', `resp: ${safeString(resp)}`);
+        const body = resp.body || '';
 
         let userId = 0;
         let token = '';
@@ -651,11 +645,9 @@ function GetCookie() {
             if (body) {
                 userId = req.body?.data?.user?.id || 0;
             }
-            token = req.headers?.token || req.headers?.Token || '';
+            token = req.headers?.token || '';
         }
-        $nobyda.notify('GetCookie', '', `userId: ${userId}`);
-        $nobyda.notify('GetCookie', '', `token: ${token}`);
-
+        
         if (userId && token) {
             const tokenData = {userId, token};
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
