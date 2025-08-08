@@ -650,6 +650,7 @@ function GetCookie() {
     try {
         const url = req.url || '';
         const body = resp.body || '';
+        $nobyda.notify('GetCookie', '', `body: ${body}`);
 
         let userId = 0;
         let token = '';
