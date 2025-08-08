@@ -648,6 +648,9 @@ function GetCookie() {
             token = req.headers?.token || '';
         }
 
+        $nobyda.notify('GetCookie', '', `userId: ${userId}`);
+        $nobyda.notify('GetCookie', '', `token: ${token}`);
+        
         if (userId && token) {
             const tokenData = {userId, token};
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
