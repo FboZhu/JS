@@ -632,29 +632,35 @@ function GetCookie() {
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
+
+        const safeJSONString = (v) => {
+            try { return JSON.stringify(v); } catch (_) { return String(v); }
+        };
+
         const hasRespStr = typeof req.response === 'string' && req.response.length > 0;
         const hasRespObj = req.response && typeof req.response === 'object';
         const hasBodyStr = typeof req.body === 'string' && req.body.length > 0;
         const hasBodyObj = req.body && typeof req.body === 'object';
+
+        // 调试通知：请求信息与类型
+        $nobyda.notify('GetCookie', '', `method: ${req.method || ''}`);
+        $nobyda.notify('GetCookie', '', `url: ${url}`);
+        $nobyda.notify('GetCookie', '', `headersType: ${typeof req.headers}`);
+        $nobyda.notify('GetCookie', '', `headersObj: ${safeJSONString(req.headers)}`);
+        $nobyda.notify('GetCookie', '', `hasResponseStr: ${hasRespStr}, hasResponseObj: ${hasRespObj}`);
+        $nobyda.notify('GetCookie', '', `bodyType: ${typeof req.body}`);
+        $nobyda.notify('GetCookie', '', `bodyObj: ${safeJSONString(hasBodyObj ? req.body : (hasBodyStr ? (()=>{try{return JSON.parse(req.body)}catch(_){return req.body}})() : null))}`);
 
         // 解析正文
         let parsed = null;
         if (hasRespObj) {
             parsed = req.response;
         } else if (hasRespStr) {
-            try {
-                parsed = JSON.parse(req.response);
-            } catch (_) {
-                parsed = null;
-            }
+            try { parsed = JSON.parse(req.response); } catch (_) { parsed = null; }
         } else if (hasBodyObj) {
             parsed = req.body;
         } else if (hasBodyStr) {
-            try {
-                parsed = JSON.parse(req.body);
-            } catch (_) {
-                parsed = null;
-            }
+            try { parsed = JSON.parse(req.body); } catch (_) { parsed = null; }
         }
 
         let userId = 0;
@@ -672,7 +678,7 @@ function GetCookie() {
         $nobyda.notify('GetCookie', '', `token: ${token}`);
 
         if (userId && token) {
-            const tokenData = {userId, token};
+            const tokenData = { userId, token };
             const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
             $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
         }
