@@ -629,12 +629,6 @@ function Wait(readDelay, isInit = false) {
  */
 function GetCookie() {
     const req = $request;
-    $nobyda.notify('GetCookie', '', "method" + `${req.method}`);
-    $nobyda.notify('GetCookie', '', "body" + `${JSON.stringify(req.body)}`);
-    $nobyda.notify('GetCookie', '', "headers" + `${JSON.stringify(req.headers)}`);
-    $nobyda.notify('GetCookie', '', "response" + `${JSON.stringify(req.response)}`);
-    $nobyda.notify('GetCookie', '', "url" + `${req.url}`);
-
     if (!req || req.method === 'OPTIONS') return;
     try {
         const url = req.url || '';
@@ -650,6 +644,8 @@ function GetCookie() {
         } catch (_) {
             parsed = null;
         }
+        $nobyda.notify('GetCookie', '', "url" + `${url}`);
+        $nobyda.notify('GetCookie', '', "response" + `${rawBody}`);
 
         if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && parsed) {
             userId = parsed?.data?.user?.id || 0;
