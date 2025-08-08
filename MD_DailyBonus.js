@@ -1,3 +1,19 @@
+/*
+
+[task_local]
+# 签到
+39 11 * * * https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js, tag=MDC, enabled=true
+
+[rewrite_local]
+# 获取Token. 
+^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
+^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
+
+[mitm]
+hostname = apiv2.hichar.cn
+*/
+
+
 // 配置常量
 const CONFIG = {
     LOG_DETAILS: false, // 是否开启响应日志
