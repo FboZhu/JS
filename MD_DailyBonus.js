@@ -325,6 +325,7 @@ function notify() {
             if (shouldSkip()) {
                 finalMessage = `⚠️ 检测到Token失效，已跳过后续操作\n${finalMessage}`;
             }
+            console.log(finalMessage);
             $nobyda.notify("", "", finalMessage);
         } catch (error) {
             $nobyda.notify("通知模块 " + error.name + "‼️", JSON.stringify(error), error.message);
