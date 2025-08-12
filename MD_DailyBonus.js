@@ -177,12 +177,17 @@ function getWelfareTaskList() {
                     // 查找taskId为1的任务
                     const task1 = result.data.find(task => task.taskId === 1);
                     if (task1) {
-                        const remainingTimes = Math.max(0, task1.limitTimes - task1.nowTimes);
+                        const limitTimes = Number(task1.limitTimes) || 0;
+                        const nowTimes = Number(task1.nowTimes) || 0;
+                        // 剩余执行次数：limitTimes - nowTimes（不加1）
+                        const remainingTimes = Math.max(0, limitTimes - nowTimes);
                         // 保存任务统计信息
                         merge.TaskInfo = {
-                            limitTimes: Number(task1.limitTimes) || 0,
-                            nowTimes: Number(task1.nowTimes) || 0,
-                            remainingTimes: Number(remainingTimes) || 0
+                            limitTimes,
+                            nowTimes,
+                            alreadySuccess: nowTimes,
+                            remainingTimes,
+                            execPlannedCount: remainingTimes
                         };
                         resolve(remainingTimes);
                     } else {
@@ -190,7 +195,9 @@ function getWelfareTaskList() {
                         merge.TaskInfo = {
                             limitTimes: 0,
                             nowTimes: 0,
-                            remainingTimes: 0
+                            alreadySuccess: 0,
+                            remainingTimes: 0,
+                            execPlannedCount: 0
                         };
                         resolve(0);
                     }
@@ -291,19 +298,17 @@ function notify() {
             // 1. 标题行：余额变化
             notifyLines.push(`毛豆充任务完成，余额：${beforeMoney} -> ${afterMoney}`);
 
-            // 2. 签到结果（如果有）
+            // 2. 综合描述：任务概览（总次数、已成功、本次执行、本次成功/失败）
+            const taskLimit = merge.TaskInfo?.limitTimes ?? 0;
+            const taskAlreadySuccess = merge.TaskInfo?.alreadySuccess ?? 0; // nowTimes
+            const taskExecPlanned = merge.TaskInfo?.execPlannedCount ?? 0;   // limit-now
+            const taskSuccess = merge.MaoDouTask?.success || 0;              // 本次成功
+            const taskFail = merge.MaoDouTask?.fail || 0;                    // 本次失败
+            notifyLines.push(`毛豆充任务完成，总次数：${taskLimit}，已经成功${taskAlreadySuccess}次，本次执行${taskExecPlanned}次，成功${taskSuccess}次，失败${taskFail}次`);
+
+            // 3. 签到结果（如果有）
             if (merge.MaoDouSign && merge.MaoDouSign.notify) {
                 notifyLines.push(merge.MaoDouSign.notify);
-            }
-
-            // 3. 任务汇总
-            const taskLimit = merge.TaskInfo?.limitTimes ?? undefined;
-            const taskSuccess = merge.MaoDouTask?.success || 0;
-            const taskFail = merge.MaoDouTask?.fail || 0;
-            if (typeof taskLimit === 'number') {
-                notifyLines.push(`毛豆充-任务完成，总次数：${taskLimit}，成功完成${taskSuccess}次${taskFail > 0 ? `，失败${taskFail}次` : ''}`);
-            } else {
-                notifyLines.push(`毛豆充-任务完成，总次数：0，成功完成0次`);
             }
 
             // 4. 抽奖汇总
@@ -424,6 +429,11 @@ async function randomDelayTask(delay) {
         return;
     }
 
+    // 重置本次执行的成功/失败计数
+    merge.MaoDouTask = merge.MaoDouTask || {};
+    merge.MaoDouTask.success = 0;
+    merge.MaoDouTask.fail = 0;
+
     // 改为顺序执行，这样可以及时检测到任务完成状态
     for (let i = 0; i < taskCount; i++) {
         // 每次循环前检查是否需要跳过
@@ -533,6 +543,11 @@ async function randomDelayDraw(delay) {
     if (drawCount === 0) {
         return;
     }
+
+    // 重置本次抽奖的成功/失败计数
+    merge.MaoDouDraw = merge.MaoDouDraw || {};
+    merge.MaoDouDraw.success = 0;
+    merge.MaoDouDraw.fail = 0;
 
     // 改为顺序执行，这样可以及时检测到积分不足状态
     for (let i = 0; i < drawCount; i++) {
