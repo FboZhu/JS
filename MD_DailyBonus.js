@@ -123,7 +123,6 @@ function UserInfo(name) {
             try {
                 if (error) throw new Error(error);
                 const result = JSON.parse(data);
-                const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
                 if (result.code === 0 && result.data) {
                     merge.TotalMoney[name] = result.data.globalPoints;
                     merge.MaoDouUserInfo.notify = `毛豆充-查询成功，余额${result.data.globalPoints}`;
@@ -171,9 +170,7 @@ function getWelfareTaskList() {
             try {
                 if (error) throw new Error(error);
                 const result = JSON.parse(data);
-                const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
-
-                if (result.code === 0 && result.data && result.data) {
+                if (result.code === 0 && Array.isArray(result.data)) {
                     // 查找taskId为1的任务
                     const task1 = result.data.find(task => task.taskId === 1);
                     if (task1) {
@@ -260,13 +257,11 @@ function getUserWelfarePoints() {
             try {
                 if (error) throw new Error(error);
                 const result = JSON.parse(data);
-                const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
-
                 if (result.code === 0 && result.data && typeof result.data.points === 'number') {
                     const points = result.data.points;
                     const drawCount = Math.max(0, Math.floor(points / 1000)); // 使用固定的1000积分
                     // 保存抽奖统计信息
-                    merge.DrawInfo = { points: Number(points) || 0, drawCount: Number(drawCount) || 0 };
+                    merge.DrawInfo = {points: Number(points) || 0, drawCount: Number(drawCount) || 0};
                     resolve(drawCount);
                 } else if (result.code === 2004) {
                     CONFIG.SKIP = true;
@@ -379,8 +374,6 @@ function MaoDouSign(delay) {
                     if (error) throw new Error(error);
 
                     const result = JSON.parse(data);
-                    const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
-
                     if (result.code === 2004) {
                         CONFIG.SKIP = true;
                         merge.MaoDouSign.notify = "毛豆充-签到失败, 原因: Token失效‼️";
@@ -458,7 +451,7 @@ async function randomDelayTask(delay) {
  * 毛豆充任务
  */
 function MaoDouTask(delay, index) {
-    merge.MaoDouTask = merge.MaoDouTask || { success: 0, fail: 0 };
+    merge.MaoDouTask = merge.MaoDouTask || {success: 0, fail: 0};
 
     return new Promise(resolve => {
         // 检查是否需要跳过
@@ -493,8 +486,6 @@ function MaoDouTask(delay, index) {
                     if (error) throw new Error(error);
 
                     const result = JSON.parse(data);
-                    const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
-
                     if (result.code === 2004) {
                         CONFIG.SKIP = true;
                         merge.MaoDouTask.notify = "毛豆充-任务失败, 原因: Token失效‼️";
@@ -512,9 +503,7 @@ function MaoDouTask(delay, index) {
                     } else {
                         merge.MaoDouTask.fail = (merge.MaoDouTask.fail || 0) + 1;
                         merge.MaoDouTask.notify = `毛豆充-任务${index}失败`;
-                        if (details) {
-                            merge.MaoDouTask.failDetail = (merge.MaoDouTask.failDetail || []).concat(`任务${index}失败: ${result.msg || result.message || '未知错误'}`);
-                        }
+                        merge.MaoDouTask.failDetail = (merge.MaoDouTask.failDetail || []).concat(`任务${index}失败: ${result.msg || result.message || '未知错误'}`);
                     }
                 } catch (error) {
                     $nobyda.AnError("毛豆充-任务", "MaoDouTask", error, response, data);
@@ -573,7 +562,7 @@ async function randomDelayDraw(delay) {
  * 毛豆充抽奖
  */
 function MaoDouDraw(delay, index) {
-    merge.MaoDouDraw = merge.MaoDouDraw || { success: 0, fail: 0 };
+    merge.MaoDouDraw = merge.MaoDouDraw || {success: 0, fail: 0};
 
     return new Promise(resolve => {
         // 检查是否需要跳过
@@ -596,8 +585,6 @@ function MaoDouDraw(delay, index) {
                     if (error) throw new Error(error);
 
                     const result = JSON.parse(data);
-                    const details = CONFIG.LOG_DETAILS ? `response:\n${data}` : '';
-
                     if (result.code === 2004) {
                         CONFIG.SKIP = true;
                         merge.MaoDouDraw.notify = "毛豆充-抽奖失败, 原因: Token失效‼️";
@@ -615,9 +602,7 @@ function MaoDouDraw(delay, index) {
                     } else {
                         merge.MaoDouDraw.fail = (merge.MaoDouDraw.fail || 0) + 1;
                         merge.MaoDouDraw.notify = `毛豆充-抽奖${index}失败`;
-                        if (details) {
-                            merge.MaoDouDraw.failDetail = (merge.MaoDouDraw.failDetail || []).concat(`抽奖${index}失败: ${result.msg || result.message || '未知错误'}`);
-                        }
+                        merge.MaoDouDraw.failDetail = (merge.MaoDouDraw.failDetail || []).concat(`抽奖${index}失败: ${result.msg || result.message || '未知错误'}`);
                     }
                 } catch (error) {
                     $nobyda.AnError("毛豆充-抽奖", "MaoDouDraw", error, response, data);
@@ -676,10 +661,7 @@ function GetCookie() {
         let userId = 0;
         let token = '';
 
-        if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login/.test(url) && bodyData) {
-            userId = bodyData?.data?.user?.id || 0;
-            token = bodyData?.data?.token || '';
-        } else if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
+        if (/https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo/.test(url)) {
             if (bodyData) {
                 userId = bodyData?.data?.id || 0;
             }
@@ -687,9 +669,23 @@ function GetCookie() {
         }
 
         if (userId && token) {
-            const tokenData = {userId, token};
-            const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
-            $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
+            // 读取已有Cookies并比较，避免重复写入
+            let existedRaw = $nobyda.read('Cookies');
+            let existed = null;
+            try {
+                existed = typeof existedRaw === 'string' ? JSON.parse(existedRaw) : existedRaw;
+            } catch (e) {
+                existed = null;
+            }
+
+            if (existed && existed.userId === userId && existed.token === token) {
+                // 数据未变化，静默跳过写入与通知，避免重复噪音
+                return;
+            } else {
+                const tokenData = {userId, token};
+                const writeResult = $nobyda.write(JSON.stringify(tokenData, null, 2), 'Cookies');
+                $nobyda.notify(`用户名: ${userId}`, '', `写入[账号${userId}] Token ${writeResult ? '成功 🎉' : '失败 ‼️'}`);
+            }
         } else {
             throw new Error(`Cookie中缺少信息,userID:${userId},token:${token}`);
         }
@@ -896,8 +892,14 @@ function nobyda() {
 
     const post = (options, callback) => {
         options.headers = options.headers || {};
-        options.headers['User-Agent'] = 'JD4iPhone/167169 (iPhone; iOS 13.4.1; Scale/3.00)';
-        if (options.body) {
+        // 保留调用方自定义 UA
+        const hasUserAgent = Object.prototype.hasOwnProperty.call(options.headers, 'User-Agent') || Object.prototype.hasOwnProperty.call(options.headers, 'user-agent');
+        if (!hasUserAgent) {
+            options.headers['User-Agent'] = 'JD4iPhone/167169 (iPhone; iOS 13.4.1; Scale/3.00)';
+        }
+        // 保留调用方自定义 Content-Type
+        const hasContentType = Object.prototype.hasOwnProperty.call(options.headers, 'Content-Type') || Object.prototype.hasOwnProperty.call(options.headers, 'content-type');
+        if (!hasContentType && options.body) {
             // 检查body是否为JSON字符串，如果是则设置Content-Type为application/json
             if (typeof options.body === 'string' && (options.body.startsWith('{') || options.body.startsWith('['))) {
                 options.headers['Content-Type'] = 'application/json';
