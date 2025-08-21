@@ -8,7 +8,6 @@
 [rewrite_local]
 # 获取Token. 
 ^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
-^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
 
 [mitm]
 hostname = apiv2.hichar.cn
@@ -290,8 +289,14 @@ function notify() {
             const beforeMoney = merge.TotalMoney?.before || 0;
             const afterMoney = merge.TotalMoney?.after || 0;
 
+
             // 1. 标题行：余额变化
             notifyLines.push(`毛豆充任务完成，余额：${beforeMoney} -> ${afterMoney}`);
+
+            // 3. 签到结果
+            if (merge.MaoDouSign && merge.MaoDouSign.notify) {
+                notifyLines.push(merge.MaoDouSign.notify);
+            }
 
             // 2. 综合描述：任务概览（总次数、已成功、本次执行、本次成功/失败）
             const taskLimit = merge.TaskInfo?.limitTimes ?? 0;
@@ -299,18 +304,14 @@ function notify() {
             const taskExecPlanned = merge.TaskInfo?.execPlannedCount ?? 0;   // limit-now
             const taskSuccess = merge.MaoDouTask?.success || 0;              // 本次成功
             const taskFail = merge.MaoDouTask?.fail || 0;                    // 本次失败
-            notifyLines.push(`毛豆充任务完成，总次数：${taskLimit}，已经成功${taskAlreadySuccess}次，本次执行${taskExecPlanned}次，成功${taskSuccess}次，失败${taskFail}次`);
+            notifyLines.push(`毛豆充-任务，总次数：${taskLimit}，已经成功${taskAlreadySuccess}次，本次执行${taskExecPlanned}次，成功${taskSuccess}次，失败${taskFail}次`);
 
-            // 3. 签到结果（如果有）
-            if (merge.MaoDouSign && merge.MaoDouSign.notify) {
-                notifyLines.push(merge.MaoDouSign.notify);
-            }
 
             // 4. 抽奖汇总
             const totalPoints = merge.DrawInfo?.points ?? 0;
             const drawSuccess = merge.MaoDouDraw?.success || 0;
             const drawFail = merge.MaoDouDraw?.fail || 0;
-            notifyLines.push(`毛豆充-抽奖完成，总积分：${totalPoints}，成功抽奖${drawSuccess}次${drawFail > 0 ? `，失败${drawFail}次` : ''}`);
+            notifyLines.push(`毛豆充-抽奖，总积分：${totalPoints}，成功抽奖${drawSuccess}次${drawFail > 0 ? `，失败${drawFail}次` : ''}`);
 
             // 5. 失败详情（如有），逐行追加
             const failDetails = [];
@@ -328,7 +329,7 @@ function notify() {
             if (shouldSkip()) {
                 notifyLines.unshift('⚠️ 检测到Token失效，已跳过后续操作');
             }
-
+            console.log(notifyLines.join('\n'))
             $nobyda.notify('', '', notifyLines.join('\n'));
         } catch (error) {
             $nobyda.notify('通知模块 ' + error.name + '‼️', JSON.stringify(error), error.message);
