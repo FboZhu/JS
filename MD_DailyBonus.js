@@ -8,6 +8,7 @@
 [rewrite_local]
 # 获取Token. 
 ^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
+^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
 
 [mitm]
 hostname = apiv2.hichar.cn
@@ -19,8 +20,6 @@ const CONFIG = {
     LOG_DETAILS: false, // 是否开启响应日志
     STOP_DELAY: '0', // 自定义延迟签到，单位毫秒
     TIMEOUT: 0, // 接口超时退出，0则关闭
-    TASK_COUNT: 5, // 任务执行次数
-    DRAW_COUNT: 8, // 抽奖执行次数
     MIN_WAIT_TIME: 5000, // 最小等待时间
     MAX_WAIT_TIME: 10000, // 最大等待时间
     SKIP: false
@@ -34,7 +33,6 @@ const API_CONFIG = {
         SIGN: '/api/user/welfare/userSign',
         TASK: '/api/user/welfare/downWelfareJob',
         DRAW: '/api/user/welfare/draw',
-        LOGIN: '/api/user/user/wechat-login',
         WELFARE_TASK_LIST: '/api/user/welfare/welfareTaskList',
         USER_WELFARE_POINTS: '/api/user/welfare/userWelfarePoints'
     }
