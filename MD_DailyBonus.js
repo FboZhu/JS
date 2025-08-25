@@ -8,7 +8,6 @@
 [rewrite_local]
 # 获取Token. 
 ^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/userInfo url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
-^https:\/\/apiv2\.hichar\.cn\/api\/user\/user\/wechat-login url script-response-body https://raw.githubusercontent.com/FboZhu/JS/refs/heads/main/MD_DailyBonus.js
 
 [mitm]
 hostname = apiv2.hichar.cn
